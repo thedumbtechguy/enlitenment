@@ -470,7 +470,7 @@ unless SKIP_LITESTREAM
     [
       "",
       "# Allow puma to manage Litestream replication process",
-      "plugin :litestream"
+      "plugin :litestream if ENV[\"RAILS_ENV\"] == \"production\""
     ].join("\n")
   end
 
