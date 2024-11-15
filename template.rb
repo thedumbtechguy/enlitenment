@@ -22,9 +22,6 @@ LITESTREAM_ROUTE = ENV.fetch("LITESTREAM_ROUTE", "/manage/litestream").freeze
 SKIP_SOLID_ERRORS = ENV.fetch("SKIP_SOLID_ERRORS", false).freeze
 ERRORS_DB = ENV.fetch("ERRORS_DB", "errors").freeze
 ERRORS_ROUTE = ENV.fetch("ERRORS_ROUTE", "/manage/errors").freeze
-ERRORS_EMAIL_FROM = ENV.fetch("ERRORS_EMAIL_FROM", "").freeze
-ERRORS_EMAIL_TO = ENV.fetch("ERRORS_EMAIL_TO", "").freeze
-ERRORS_PASSWORD = ENV.fetch("ERRORS_PASSWORD", "3rr0r$").freeze
 
 SKIP_SOLID_CABLE = ENV.fetch("SKIP_SOLID_CABLE", false).freeze
 CABLE_DB = ENV.fetch("CABLE_DB", "cable").freeze
@@ -474,8 +471,8 @@ unless SKIP_LITESTREAM
   insert_into_file LITESTREAM_FILE, before: "Rails.application.configure do" do
     [
       "# Ensure authorization is enabled for the Litestream web UI",
-      "Litestream.username = \"admin\"",
-      "Litestream.password = \"#{LITESTREAM_PASSWORD}\" # TODO: CHANGE THIS",
+      "Litestream.username = ENV[\"LITESTREAM_USER\"]",
+      "Litestream.password = ENV[\"LITESTREAM_PASSWORD\"]",
       "",
       "",
     ].join("\n")
@@ -585,7 +582,7 @@ unless SKIP_SOLID_ERRORS
     insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(connects_to)}.*$/ do
       [
         "",
-        "\\1#{send_emails} = true",
+        "\\1#{send_emails} = ENV[\"SOLID_ERRORS_SEND_EMAILS\"]",
       ].join("\n")
     end
   end
@@ -595,7 +592,7 @@ unless SKIP_SOLID_ERRORS
     insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(send_emails)}.*$/ do
       [
         "",
-        "\\1#{email_from} = \"#{ERRORS_EMAIL_FROM}\"",
+        "\\1#{email_from} = ENV[\"SOLID_ERRORS_EMAIL_FROM\"]",
       ].join("\n")
     end
   end
@@ -605,7 +602,7 @@ unless SKIP_SOLID_ERRORS
     insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(email_from)}.*$/ do
       [
         "",
-        "\\1#{email_to} = \"#{ERRORS_EMAIL_TO}\"",
+        "\\1#{email_to} = ENV[\"SOLID_ERRORS_EMAIL_TO\"]",
       ].join("\n")
     end
   end
@@ -630,7 +627,7 @@ unless SKIP_SOLID_ERRORS
     insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(email_to)}.*$/ do
       [
         "",
-        "\\1#{username} = Rails.application.credentials.dig(:solid_errors, :username)",
+        "\\1#{username} = ENV[\"SOLID_ERRORS_USERNAME\"]",
       ].join("\n")
     end
   end
@@ -640,7 +637,7 @@ unless SKIP_SOLID_ERRORS
     insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(username)}.*$/ do
       [
         "",
-        "\\1#{password} = Rails.application.credentials.dig(:solid_errors, :password)",
+        "\\1#{password} = ENV[\"SOLID_ERRORS_PASSWORD\"]",
       ].join("\n")
     end
   end
