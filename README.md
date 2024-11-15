@@ -25,13 +25,13 @@ To apply the template while scaffolding a new Rails application, you pass the lo
 
 ```bash
 rails new my-app \
-  --template https://raw.githubusercontent.com/fractaledmind/enlitenment/main/template.rb
+  --template https://raw.githubusercontent.com/thedumbtechguy/enlitenment/main/template.rb
 ```
 
 If you want to apply the template to an existing application, you use the `app:template` command and pass the location of the template via the `LOCATION` environment variable:
 ```bash
 bin/rails app:template \
-  LOCATION=https://raw.githubusercontent.com/fractaledmind/enlitenment/main/template.rb
+  LOCATION=https://raw.githubusercontent.com/thedumbtechguy/enlitenment/main/template.rb
 ```
 
 Rails accepts a URL to a remote version of the script file, so you can point directly to the template file in this repository.
