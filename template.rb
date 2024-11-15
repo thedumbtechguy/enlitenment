@@ -6,9 +6,6 @@ RAILS_GEM_VERSION = Gem::Version.new(Rails::VERSION::STRING).freeze
 RAILS_8_VERSION = Gem::Version.new("8.0.0").freeze
 AT_LEAST_RAILS_8 = RAILS_GEM_VERSION.release >= RAILS_8_VERSION
 
-# user-configurable constants for the template
-INSTALL_INTO = ENV.fetch("INSTALL_INTO", "production").freeze
-
 SKIP_SOLID_QUEUE = ENV.fetch("SKIP_SOLID_QUEUE", false).freeze
 QUEUE_DB = ENV.fetch("QUEUE_DB", "queue").freeze
 JOBS_ROUTE = ENV.fetch("JOBS_ROUTE", "/jobs").freeze
@@ -36,8 +33,7 @@ CABLE_DB = ENV.fetch("CABLE_DB", "cable").freeze
 # ------------------------------------------------------------------------------
 
 PUMA_FILE = "config/puma.rb".freeze
-APPLICATION_FILE = "config/application.rb".freeze
-PRODUCTION_FILE = "config/environments/production.rb".freeze
+CONFIGURATION_FILE = "config/application.rb".freeze
 DATABASE_FILE = "config/database.yml".freeze
 ROUTES_FILE = "config/routes.rb".freeze
 CACHE_FILE = "config/cache.yml".freeze
@@ -45,10 +41,7 @@ QUEUE_FILE = "config/queue.yml".freeze
 CABLE_FILE = "config/cable.yml".freeze
 LITESTREAM_FILE = "config/initializers/litestream.rb".freeze
 
-APPLICATION_REGEX = /^([ \t]*).*?(?=\n\s*end\nend)$/
-PRODUCTION_REGEX = /^([ \t]*).*?(?=\nend)$/
-CONFIGURATION_REGEX = INSTALL_INTO == "application" ? APPLICATION_REGEX : PRODUCTION_REGEX
-CONFIGURATION_FILE = INSTALL_INTO == "application" ? APPLICATION_FILE : PRODUCTION_FILE
+CONFIGURATION_REGEX = /^([ \t]*).*?(?=\n\s*end\nend)$/
 
 class DatabaseYAML
   COMMENTED_PROD_DATABASE = "# database: path/to/persistent/storage/production.sqlite3"
@@ -190,8 +183,6 @@ unless SKIP_SOLID_QUEUE
 
   # 4. add the new database configuration to all environments
   database_yaml.add_database(QUEUE_DB).each do |environment, old_environment_entry, new_environment_entry|
-    next if INSTALL_INTO != "application" and environment != "production"
-
     # NOTE: this `gsub_file` call is idempotent because we are only finding and replacing plain strings.
     gsub_file DATABASE_FILE,
               old_environment_entry,
@@ -204,6 +195,7 @@ unless SKIP_SOLID_QUEUE
   # NOTE: we run the command directly instead of via the `generate` helper
   # because that doesn't allow passing arbitrary environment variables.
   run_or_error "bin/rails generate solid_queue:install", env: { "DATABASE" => QUEUE_DB }
+  git checkout: "-- config/environments/production.rb"
 
   # 6. run the migrations for the new database
   # NOTE: we run the command directly instead of via the `rails_command` helper
@@ -328,8 +320,6 @@ unless SKIP_SOLID_CACHE
 
   # 4. add the new database configuration to all environments
   database_yaml.add_database(CACHE_DB).each do |environment, old_environment_entry, new_environment_entry|
-    next if INSTALL_INTO != "application" and environment != "production"
-
     # NOTE: this `gsub_file` call is idempotent because we are only finding and replacing plain strings.
     gsub_file DATABASE_FILE,
               old_environment_entry,
@@ -342,6 +332,7 @@ unless SKIP_SOLID_CACHE
   # NOTE: we run the command directly instead of via the `generate` helper
   # because that doesn't allow passing arbitrary environment variables.
   run_or_error "bin/rails generate solid_cache:install", env: { "DATABASE" => CACHE_DB }
+  git checkout: "-- config/environments/production.rb"
 
   # 6. run the migrations for the new database
   # NOTE: we run the command directly instead of via the `rails_command` helper
@@ -399,8 +390,6 @@ unless SKIP_SOLID_CABLE
 
   # 4. add the new database configuration to all environments
   database_yaml.add_database(CABLE_DB).each do |environment, old_environment_entry, new_environment_entry|
-    next if INSTALL_INTO != "application" and environment != "production"
-
     # NOTE: this `gsub_file` call is idempotent because we are only finding and replacing plain strings.
     gsub_file DATABASE_FILE,
               old_environment_entry,
@@ -413,6 +402,7 @@ unless SKIP_SOLID_CABLE
   # NOTE: we run the command directly instead of via the `generate` helper
   # because that doesn't allow passing arbitrary environment variables.
   run_or_error "bin/rails generate solid_cable:install", env: { "DATABASE" => CABLE_DB }
+  git checkout: "-- config/environments/production.rb"
 
   # 6. run the migrations for the new database
   # NOTE: we run the command directly instead of via the `rails_command` helper
@@ -420,48 +410,27 @@ unless SKIP_SOLID_CABLE
   run_or_error "bin/rails db:prepare", env: { "DATABASE" => CABLE_DB }
 
   # 7. configure the application to use Solid Cable in all environments with the new database
-  if INSTALL_INTO == "application"
-    remove_file(CABLE_FILE)
-    create_file(CABLE_FILE, <<~YAML)
-      default: &default
-        adapter: solid_cable
-        polling_interval: 1.second
-        keep_messages_around_for: 1.day
-        connects_to:
-          database:
-            writing: #{CABLE_DB}
+  remove_file(CABLE_FILE)
+  create_file(CABLE_FILE, <<~YAML)
+    default: &default
+      adapter: solid_cable
+      polling_interval: 1.second
+      keep_messages_around_for: 1.day
+      connects_to:
+        database:
+          writing: #{CABLE_DB}
 
-      development:
-        <<: *default
-        silence_polling: true
+    development:
+      <<: *default
+      silence_polling: true
 
-      test:
-        <<: *default
+    test:
+      <<: *default
 
-      production:
-        <<: *default
-        polling_interval: 0.1.seconds
-    YAML
-  else
-    old_production_cable_config = <<~YAML
-      production:
-        adapter: redis
-        url: <%%= ENV.fetch("REDIS_URL") { "redis://localhost:6379/1" } %>
-        channel_prefix: <%= app_name %>_production
-    YAML
-    new_production_cable_config = <<~YAML
-      production:
-        adapter: solid_cable
-        connects_to:
-          database:
-            writing: #{CABLE_DB}
-        polling_interval: 0.1.seconds
-        keep_messages_around_for: 1.day
-    YAML
-    gsub_file("config/cable.yml",
-              old_production_cable_config,
-              new_production_cable_config)
-  end
+    production:
+      <<: *default
+      polling_interval: 0.1.seconds
+  YAML
 end
 
 # Add Litestream
@@ -577,8 +546,6 @@ unless SKIP_SOLID_ERRORS
 
   # 4. add the new database configuration to all environments
   database_yaml.add_database(ERRORS_DB).each do |environment, old_environment_entry, new_environment_entry|
-    next if INSTALL_INTO != "application" and environment != "production"
-
     # NOTE: this `gsub_file` call is idempotent because we are only finding and replacing plain strings.
     gsub_file DATABASE_FILE,
               old_environment_entry,
@@ -591,6 +558,7 @@ unless SKIP_SOLID_ERRORS
   # NOTE: we run the command directly instead of via the `generate` helper
   # because that doesn't allow passing arbitrary environment variables.
   run_or_error "bin/rails generate solid_errors:install", env: { "DATABASE" => ERRORS_DB }
+  git checkout: "-- config/environments/production.rb"
 
   # 6. prepare the new database
   # NOTE: we run the command directly instead of via the `rails_command` helper
