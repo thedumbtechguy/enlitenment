@@ -15,7 +15,7 @@ SKIP_SOLID_CACHE = ENV.fetch("SKIP_SOLID_CACHE", false).freeze
 CACHE_DB = ENV.fetch("CACHE_DB", "cache").freeze
 SKIP_DEV_CACHE = ENV.fetch("SKIP_DEV_CACHE", false).freeze
 
-SKIP_LITESTREAM = ENV.fetch("SKIP_LITESTREAM", false).freeze
+SKIP_LITESTREAM = ENV.fetch("SKIP_LITESTREAM", true).freeze
 SKIP_LITESTREAM_CREDS = ENV.fetch("SKIP_LITESTREAM_CREDS", false).freeze
 LITESTREAM_ROUTE = ENV.fetch("LITESTREAM_ROUTE", "/manage/litestream").freeze
 
