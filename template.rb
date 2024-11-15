@@ -8,7 +8,7 @@ AT_LEAST_RAILS_8 = RAILS_GEM_VERSION.release >= RAILS_8_VERSION
 
 SKIP_SOLID_QUEUE = ENV.fetch("SKIP_SOLID_QUEUE", false).freeze
 QUEUE_DB = ENV.fetch("QUEUE_DB", "queue").freeze
-JOBS_ROUTE = ENV.fetch("JOBS_ROUTE", "/jobs").freeze
+JOBS_ROUTE = ENV.fetch("JOBS_ROUTE", "/manage/jobs").freeze
 JOBS_CONTROLLER = ENV.fetch("JOBS_CONTROLLER", "AdminController").freeze
 
 SKIP_SOLID_CACHE = ENV.fetch("SKIP_SOLID_CACHE", false).freeze
@@ -17,12 +17,11 @@ SKIP_DEV_CACHE = ENV.fetch("SKIP_DEV_CACHE", false).freeze
 
 SKIP_LITESTREAM = ENV.fetch("SKIP_LITESTREAM", false).freeze
 SKIP_LITESTREAM_CREDS = ENV.fetch("SKIP_LITESTREAM_CREDS", false).freeze
-LITESTREAM_ROUTE = ENV.fetch("LITESTREAM_ROUTE", "/litestream").freeze
-LITESTREAM_PASSWORD = ENV.fetch("LITESTREAM_PASSWORD", "lite$tr3am").freeze
+LITESTREAM_ROUTE = ENV.fetch("LITESTREAM_ROUTE", "/manage/litestream").freeze
 
 SKIP_SOLID_ERRORS = ENV.fetch("SKIP_SOLID_ERRORS", false).freeze
 ERRORS_DB = ENV.fetch("ERRORS_DB", "errors").freeze
-ERRORS_ROUTE = ENV.fetch("ERRORS_ROUTE", "/errors").freeze
+ERRORS_ROUTE = ENV.fetch("ERRORS_ROUTE", "/manage/errors").freeze
 ERRORS_EMAIL_FROM = ENV.fetch("ERRORS_EMAIL_FROM", "").freeze
 ERRORS_EMAIL_TO = ENV.fetch("ERRORS_EMAIL_TO", "").freeze
 ERRORS_PASSWORD = ENV.fetch("ERRORS_PASSWORD", "3rr0r$").freeze
