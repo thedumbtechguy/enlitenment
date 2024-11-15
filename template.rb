@@ -218,7 +218,7 @@ unless SKIP_SOLID_QUEUE
     insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(queue_adapter)}.*$/ do
       [
         "",
-        "\\1#{connects_to} = { database: { writing: :#{QUEUE_DB} } }",
+        "\\1#{connects_to} = {database: {writing: :#{QUEUE_DB}}}",
       ].join("\n")
     end
   end
@@ -571,7 +571,7 @@ unless SKIP_SOLID_ERRORS
         "",
         "",
         "\\1# Configure Solid Errors",
-        "\\1#{connects_to} = { database: { writing: :#{ERRORS_DB} } }",
+        "\\1#{connects_to} = {database: {writing: :#{ERRORS_DB}}}",
       ].join("\n")
     end
   end
