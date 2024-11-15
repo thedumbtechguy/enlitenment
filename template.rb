@@ -150,7 +150,18 @@ def bundle_install
   end
 end
 
+def ensure_clean_git!
+  git_repo = run("git rev-parse --git-dir", capture: true) # Check if it's a git repo first
+  if !git_repo || run("git status --porcelain", capture: true).present?
+    say "ERROR: You have uncommitted changes. Please commit or stash them:", :red
+    exit 1
+  end
+end
+
 # ------------------------------------------------------------------------------
+
+# Ensure we have a clean git
+ensure_clean_git!
 
 # Ensure the sqlite3 gem is installed
 add_gem "sqlite3", "~> 2.0", comment: "Use SQLite as the database engine"
@@ -159,6 +170,8 @@ add_gem "sqlite3", "~> 2.0", comment: "Use SQLite as the database engine"
 if not AT_LEAST_RAILS_8
   add_gem "activerecord-enhancedsqlite3-adapter", "~> 0.8.0", comment: "Ensure all SQLite connections are properly configured"
 end
+
+git(add: ".") && git(commit: %( -m 'enhance sqlite' ))
 
 # Add Solid Queue
 unless SKIP_SOLID_QUEUE
@@ -295,6 +308,9 @@ unless SKIP_SOLID_QUEUE
       ].join("\n")
     end
   end
+
+  # Commit
+  git(add: ".") && git(commit: %( -m 'add solid queue' ))
 end
 
 # Add Solid Cache
@@ -365,6 +381,9 @@ unless SKIP_SOLID_CACHE
   if not SKIP_DEV_CACHE
     run_or_error "bin/rails dev:cache"
   end
+
+  # Commit
+  git(add: ".") && git(commit: %( -m 'add solid cache' ))
 end
 
 # Add Solid Cable
@@ -427,6 +446,9 @@ unless SKIP_SOLID_CABLE
       <<: *default
       polling_interval: 0.1.seconds
   YAML
+
+  # Commit
+  git(add: ".") && git(commit: %( -m 'add solid cable' ))
 end
 
 # Add Litestream
@@ -521,6 +543,9 @@ unless SKIP_LITESTREAM
       MESSAGE
     end
   end
+
+  # Commit
+  git(add: ".") && git(commit: %( -m 'add litecache' ))
 end
 
 # Add Solid Errors
@@ -641,4 +666,7 @@ unless SKIP_SOLID_ERRORS
       ].join("\n")
     end
   end
+
+  # Commit
+  git(add: ".") && git(commit: %( -m 'add solid errors' ))
 end
