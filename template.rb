@@ -236,6 +236,16 @@ unless SKIP_SOLID_QUEUE
     end
   end
 
+  silence_polling = "config.solid_queue.silence_polling"
+  if not file_includes?(CONFIGURATION_FILE, silence_polling)
+    insert_into_file CONFIGURATION_FILE, after: /^([ \t]*)#{Regexp.escape(connects_to)}.*$/ do
+      [
+        "",
+        "\\1#{silence_polling} = true",
+      ].join("\n")
+    end
+  end
+
   # 8. add the Solid Queue plugin to Puma
   # NOTE: this `insert_into_file` call is idempotent because we are only inserting a plain string.
   plugin = "plugin :solid_queue"
